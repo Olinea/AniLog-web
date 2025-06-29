@@ -12,6 +12,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
+  isLoginLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +20,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
 
   // 模拟检查本地存储的认证状态
   useEffect(() => {
@@ -40,10 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
+    setIsLoginLoading(true);
     
     // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 2500));
 
     // 简单的模拟认证逻辑
     if (email === 'admin@acme.com' && password === 'admin123') {
@@ -56,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      setIsLoading(false);
+      setIsLoginLoading(false);
       return true;
     } else if (email === 'user@acme.com' && password === 'user123') {
       const userData: User = {
@@ -68,11 +70,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      setIsLoading(false);
+      setIsLoginLoading(false);
       return true;
     }
 
-    setIsLoading(false);
+    setIsLoginLoading(false);
     return false;
   };
 
@@ -85,7 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     login,
     logout,
-    isLoading
+    isLoading,
+    isLoginLoading
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
