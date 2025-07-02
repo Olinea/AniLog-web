@@ -11,26 +11,24 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const { login, isLoginLoading } = useAuth();
+  const [clientError, setClientError] = useState('');
+  const { login, isLoginLoading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setClientError('');
 
     if (!email || !password) {
-      setError('请填写所有字段');
+      setClientError('请填写所有字段');
       return;
     }
 
-    try {
-      const success = await login(email, password);
-      if (!success) {
-        setError('邮箱或密码错误');
-      }
-    } catch {
-      setError('登录失败，请稍后重试');
+    if (!email.includes('@')) {
+      setClientError('请输入有效的邮箱地址');
+      return;
     }
+
+    await login(email, password);
   };
 
   const fillDemoCredentials = (userType: 'admin' | 'user') => {
@@ -41,8 +39,11 @@ export default function Login() {
       setEmail('user@acme.com');
       setPassword('user123');
     }
-    setError('');
+    setClientError('');
   };
+
+  // 显示客户端错误或服务器错误
+  const displayError = clientError || error;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/50">
@@ -101,9 +102,9 @@ export default function Login() {
               </div>
             </div>
 
-            {error && (
+            {displayError && (
               <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
-                {error}
+                {displayError}
               </div>
             )}
 

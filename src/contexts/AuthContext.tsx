@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { loginApi, logoutApi, checkAuthStatus } from '@/lib/api';
 
 interface User {
   id: string;
@@ -10,77 +11,76 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
   isLoginLoading: boolean;
+  error: string | null;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 模拟检查本地存储的认证状态
+  // 检查认证状态
   useEffect(() => {
-    const checkAuthStatus = () => {
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch (error) {
-          console.error('Error parsing saved user:', error);
-          localStorage.removeItem('user');
+    const checkAuth = async () => {
+      try {
+        const authData = await checkAuthStatus();
+        if (authData?.user) {
+          setUser(authData.user);
         }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        // 清除可能存在的无效token
+        await logoutApi().catch(() => {
+          // 忽略登出错误，可能是网络问题
+        });
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
-    // 模拟网络延迟
-    setTimeout(checkAuthStatus, 1000);
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoginLoading(true);
+    setError(null);
     
-    // 模拟API调用延迟
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    // 简单的模拟认证逻辑
-    if (email === 'admin@acme.com' && password === 'admin123') {
-      const userData: User = {
-        id: '1',
-        name: 'Administrator',
-        email: 'admin@acme.com',
-        avatar: '/avatars/admin.jpg'
-      };
+    try {
+      const response = await loginApi(email, password);
       
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      setIsLoginLoading(false);
-      return true;
-    } else if (email === 'user@acme.com' && password === 'user123') {
-      const userData: User = {
-        id: '2',
-        name: 'Regular User',
-        email: 'user@acme.com',
-        avatar: '/avatars/user.jpg'
-      };
+      if (response.user) {
+        setUser(response.user);
+        return true;
+      }
       
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
+      setError('登录失败：服务器响应异常');
+      return false;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '登录失败：未知错误';
+      setError(errorMessage);
+      return false;
+    } finally {
       setIsLoginLoading(false);
-      return true;
     }
-
-    setIsLoginLoading(false);
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async (): Promise<void> => {
+    try {
+      await logoutApi();
+    } catch (err) {
+      console.error('Logout API failed:', err);
+      // 即使API调用失败，也要清除本地状态
+    } finally {
+      setUser(null);
+      setError(null);
+    }
   };
 
   const value = {
@@ -88,7 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     logout,
     isLoading,
-    isLoginLoading
+    isLoginLoading,
+    error
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
