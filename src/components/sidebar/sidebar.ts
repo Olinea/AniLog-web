@@ -36,6 +36,11 @@ export const sidebarData: SidebarData = {
       icon: IconDashboard,
     },
     {
+      title: "Animals",
+      url: "/animals",
+      icon: IconDashboard,
+    },
+    {
       title: "Team",
       url: "/team",
       icon: IconUsers,

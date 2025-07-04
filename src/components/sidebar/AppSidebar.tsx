@@ -46,9 +46,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {user && (
           <NavUser
             user={{
-              name: user.name,
+              name: user.username,
               email: user.email,
-              avatar: user.avatar || "/avatars/default.jpg",
+              avatar: user.avatarUrl || "/avatars/default.jpg",
             }}
           />
         )}

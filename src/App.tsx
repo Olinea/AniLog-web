@@ -15,6 +15,7 @@ import Help from "@/pages/dashboard/Help";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
+// import Animals from "./pages/dashboard/Animals";
 
 // 主应用组件 - 需要认证状态
 function MainApp() {
@@ -51,6 +52,7 @@ function MainApp() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/search" element={<Search />} />
                   <Route path="/help" element={<Help />} />
+                  {/* <Route path="/animals" element={<Animals />} /> */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </div>

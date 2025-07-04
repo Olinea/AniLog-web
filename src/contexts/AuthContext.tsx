@@ -2,10 +2,13 @@ import React, { createContext, useState, useEffect } from 'react';
 import { loginApi, logoutApi, checkAuthStatus } from '@/lib/api';
 
 interface User {
-  id: string;
-  name: string;
+  id: number;
+  username: string;
   email: string;
-  avatar?: string;
+  openid: string | null;
+  avatarUrl: string | null;
+  manager: number;
+  created_at: string;
 }
 
 interface AuthContextType {
